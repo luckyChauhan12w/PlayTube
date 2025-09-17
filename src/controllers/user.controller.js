@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 
 const registerUser = asyncHandler(
     async (req, res) => {
+
         // get user details from frontend 
         // validation - not empty 
         // check if user already exist: username, email
@@ -18,8 +19,7 @@ const registerUser = asyncHandler(
 
         const { username, fullName, email, password } = req.body
 
-        console.log(req.body)
-
+        console.log("user controller-->", req.files, req.body)
         const requiredFields = [fullName, email, username, password];
         const isMissing = requiredFields.some((field) => !field || field.trim() === "");
 
@@ -37,6 +37,7 @@ const registerUser = asyncHandler(
 
         const avatarLocalPath = req.files?.avatar[0]?.path
         const coverImageLocalPath = req.files?.coverImage[0]?.path
+
 
         if (!avatarLocalPath) {
             throw new ApiError(400, "Avatar file is required")
@@ -66,10 +67,7 @@ const registerUser = asyncHandler(
             new ApiResponse(200, user, "User Created successfully")
         )
 
-
     }
 )
 
 export { registerUser }
-
-
