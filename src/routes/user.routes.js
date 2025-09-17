@@ -4,7 +4,7 @@ import upload from "../middleware/multer.middleware.js"
 
 const router = Router()
 
-///api/v1/user/register
+// /api/v1/user/register
 router.route("/register").post(registerUser)
 
 
