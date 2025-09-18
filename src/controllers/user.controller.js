@@ -180,7 +180,7 @@ const logOutUser = asyncHandler(async (req, res) => {
 
 })
 
-const validateAndGenerateToken = asyncHandler(async (req, res) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
         const incommingRefreshtoken = req.cookies?.refreshToken || req.body.refreshToken;
 
@@ -211,10 +211,9 @@ const validateAndGenerateToken = asyncHandler(async (req, res) => {
             .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Token validated successfully"));
 
     } catch (error) {
-        console.error("Token validation error:", error.message);
-        throw error;
+        throw new ApiError(401, error?.message || "Invalid refresh token");
     }
 });
 
 
-export { registerUser, loginUser, logOutUser, validateAndGenerateToken }
+export { registerUser, loginUser, logOutUser, refreshAccessToken }
