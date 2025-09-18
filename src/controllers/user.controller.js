@@ -181,15 +181,20 @@ const logOutUser = asyncHandler(async (req, res) => {
 })
 
 const validateAndGenerateToken = asyncHandler(async (req, res) => {
+
     const newRefreshtoken = req.cookies?.refreshToken || req.body.refreshToken
 
     if (!newRefreshtoken) {
-        throw new ApiError(401, "Invalid refresh token")
+        throw new ApiError(401, "Refresh token is required")
     }
 
     const decodedToken = jwt.verify(newRefreshtoken, process.env.REFRESH_TOKEN_SECRET)
 
     const user = await User.findById(decodedToken._id).select("-password")
+
+    if (!user) {
+        throw new ApiError(404, "User not found")
+    }
 
     if (newRefreshtoken !== user?.refreshToken) {
         throw new ApiError(401, "Invalid refresh token")
@@ -210,4 +215,4 @@ const validateAndGenerateToken = asyncHandler(async (req, res) => {
 
 })
 
-export { registerUser, loginUser, logOutUser }
+export { registerUser, loginUser, logOutUser, validateAndGenerateToken }
