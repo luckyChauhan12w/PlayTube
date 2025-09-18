@@ -181,38 +181,40 @@ const logOutUser = asyncHandler(async (req, res) => {
 })
 
 const validateAndGenerateToken = asyncHandler(async (req, res) => {
+    try {
+        const incommingRefreshtoken = req.cookies?.refreshToken || req.body.refreshToken;
 
-    const newRefreshtoken = req.cookies?.refreshToken || req.body.refreshToken
+        if (!incommingRefreshtoken) {
+            throw new ApiError(401, "Refresh token is required");
+        }
 
-    if (!newRefreshtoken) {
-        throw new ApiError(401, "Refresh token is required")
+        const decodedToken = jwt.verify(incommingRefreshtoken, process.env.REFRESH_TOKEN_SECRET);
+
+        const user = await User.findById(decodedToken._id).select("-password");
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        if (incommingRefreshtoken !== user?.refreshToken) {
+            throw new ApiError(401, "Invalid refresh token");
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id);
+
+        const option = { httpOnly: true, secure: true };
+
+        return res
+            .cookie("refreshToken", newRefreshToken, option)
+            .cookie("accessToken", accessToken, option)
+            .status(200)
+            .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Token validated successfully"));
+
+    } catch (error) {
+        console.error("Token validation error:", error.message);
+        throw error;
     }
+});
 
-    const decodedToken = jwt.verify(newRefreshtoken, process.env.REFRESH_TOKEN_SECRET)
-
-    const user = await User.findById(decodedToken._id).select("-password")
-
-    if (!user) {
-        throw new ApiError(404, "User not found")
-    }
-
-    if (newRefreshtoken !== user?.refreshToken) {
-        throw new ApiError(401, "Invalid refresh token")
-    }
-
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
-
-    const option = {
-        httpOnly: true,
-        secure: true,
-    }
-
-    return res
-        .cookie("refreshToken", refreshToken, option)
-        .cookie("accessToken", accessToken, option)
-        .status(200)
-        .json(new ApiResponse(200, { accessToken, refreshToken }, "Token validated successfully"))
-
-})
 
 export { registerUser, loginUser, logOutUser, validateAndGenerateToken }
